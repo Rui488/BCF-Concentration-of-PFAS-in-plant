@@ -1,0 +1,24 @@
+# ============================================================================
+# Requirements for Machine Learning Project
+# Models: XGBoost, Random Forest, MLP, SVR
+# Analysis: SHAP, Permutation Importance
+# ============================================================================
+
+# Core Machine Learning Frameworks
+scikit-learn>=1.6.1
+xgboost>=2.1.4
+
+# Interpretability Tools
+shap>=0.46.0
+
+# Data Processing & Numerical Computing
+numpy>=1.26.4
+pandas>=2.2.3
+scipy>=1.15.2
+
+# Visualization
+matplotlib>=3.10.1
+seaborn>=0.13.2
+
+# Progress Tracking & Utilities
+tqdm>=4.67.1
