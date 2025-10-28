@@ -1,0 +1,798 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "26feadfb-22b0-482e-a720-646ea9fd397b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/mnt/ffs24/home/lirui15/miniforge3/bin/python\n"
+     ]
+    }
+   ],
+   "source": [
+    "import sys\n",
+    "print(sys.executable)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "10c8039e-37eb-4668-b0b8-ac10a32eb7ba",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from rdkit import Chem\n",
+    "from rdkit.Chem import AllChem\n",
+    "from rdkit.Chem import rdFingerprintGenerator\n",
+    "from rdkit.Chem import Draw\n",
+    "from rdkit.Chem.Draw import rdMolDraw2D\n",
+    "import seaborn as sns\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fd5f9bd2-76e0-4394-a7bb-4c711ed65193",
+   "metadata": {},
+   "source": [
+    "## Convert .xlsx file to.smi ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "bdb72257-82d0-4b57-956c-f937e03f95dd",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "SMILES strings have been written to PFAS_SMILES_4.smi\n"
+     ]
+    }
+   ],
+   "source": [
+    "excel_file_path = 'PFAS-SMILES-4.xlsx'\n",
+    "\n",
+    "# Define the path for the output .smi file\n",
+    "smi_file_path = 'PFAS_SMILES_4.smi'\n",
+    "\n",
+    "# Read the Excel file\n",
+    "df = pd.read_excel(excel_file_path, engine='openpyxl')\n",
+    "\n",
+    "# Assume the SMILES strings are in a column named 'SMILES'\n",
+    "# Extract the SMILES column\n",
+    "smiles_strings = df['SMILES']\n",
+    "\n",
+    "# Write the SMILES strings to a .smi file\n",
+    "with open(smi_file_path, 'w') as smi_file:\n",
+    "    for smiles in smiles_strings:\n",
+    "        smi_file.write(smiles + '\\n')\n",
+    "\n",
+    "print(f'SMILES strings have been written to {smi_file_path}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1e0ce822-d3bf-468d-97e5-39817a6c41e0",
+   "metadata": {},
+   "source": [
+    "## Generation of extended connectivity fingerprints ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "358b928b-b13e-440f-b6d1-e0e211ed1a08",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print('reading data')\n",
+    "data = pd.read_csv('PFAS_SMILES.csv',encoding='cp1252')\n",
+    "print('reading data finished')\n",
+    "\n",
+    "\n",
+    "SMILES = data['SMILES'].to_numpy()\n",
+    "\n",
+    "#generate ECFP for all molecules\n",
+    "print('statr generating ECFP')\n",
+    "FP = []\n",
+    "ONS_index = []\n",
+    "for i,sm in enumerate(SMILES):\n",
+    "    if 'N' in sm:#or 'O' in sm or 'S' in sm:\n",
+    "        ONS_index.append(i)\n",
+    "    mol = Chem.MolFromSmiles(sm)\n",
+    "    fp = AllChem.GetMorganFingerprintAsBitVect(mol,6,nBits=1024)\n",
+    "    FP.append(fp.ToBitString())\n",
+    "data['ECFP'] = FP\n",
+    "output_file_path = 'PFAS_SMILES_with_ECFP.csv'\n",
+    "data.to_csv(output_file_path, index=False, encoding='cp1252')\n",
+    "print('finish generating ECFP')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "939c5e1d-39a6-4bf6-ac75-a0c83d0e6dbd",
+   "metadata": {},
+   "source": [
+    "## Exhibition of substructures of the chemicals ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "a30abad7-586a-4b00-a958-5bf7b6bf16ed",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{29: ((3, 4),), 47: ((8, 3),), 59: ((9, 1),), 114: ((2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0)), 207: ((2, 2),), 259: ((5, 5),), 346: ((7, 3),), 374: ((8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1)), 389: ((27, 1),), 429: ((10, 1), (11, 1), (12, 1), (13, 1), (14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1), (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1)), 447: ((4, 3),), 475: ((0, 2),), 544: ((7, 4),), 615: ((4, 5),), 617: ((3, 2),), 619: ((2, 3),), 650: ((1, 0),), 750: ((3, 3),), 790: ((6, 3), (5, 3)), 805: ((2, 1),), 807: ((0, 0), (27, 0)), 845: ((5, 4),), 861: ((6, 4),), 862: ((6, 5),), 886: ((9, 2),), 893: ((1, 1),), 904: ((10, 0), (11, 0), (12, 0), (13, 0), (14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0), (25, 0), (26, 0)), 916: ((8, 2),), 924: ((4, 4),), 953: ((0, 1),), 972: ((7, 2), (6, 2), (5, 2), (4, 2))}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:11:06] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'C(=O)(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O'\n",
+    "\n",
+    "structure_id = 845\n",
+    "\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "bi = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=6, nBits=1024, bitInfo=bi)\n",
+    "\n",
+    "print(bi)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "86a7d571-d890-44ab-944e-7f0c4de9e7d8",
+   "metadata": {},
+   "source": [
+    "## Visualisation of the substructure of a specific ECFP bit, e.g., ECFP 846 ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "1764b535-ca6f-4eb1-a792-47d3cbd46a90",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bit 845 corresponds to the following atom environments:\n",
+      "((5, 4),)\n",
+      "Image saved to: ecfp_bit_845.png\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:10:27] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'C(=O)(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O'\n",
+    "target_bit = 845  # Bit to visualize (e.g., ECFP-845)\n",
+    "\n",
+    "# Generate molecule from SMILES\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "if mol is None:\n",
+    "    raise ValueError(\"SMILES parsing failed. Please check the input format.\")\n",
+    "\n",
+    "# Calculate Morgan fingerprint and extract bit info\n",
+    "bit_info = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(\n",
+    "    mol, \n",
+    "    radius=6, \n",
+    "    nBits=1024, \n",
+    "    bitInfo=bit_info\n",
+    ")\n",
+    "\n",
+    "# Check if the target bit exists\n",
+    "if target_bit in bit_info:\n",
+    "    print(f\"Bit {target_bit} corresponds to the following atom environments:\")\n",
+    "    print(bit_info[target_bit])  # Output: [(center_atom_idx, radius)]\n",
+    "    \n",
+    "    # Get all atoms involved in the feature\n",
+    "    highlight_atoms = set()\n",
+    "    for (center_atom, radius) in bit_info[target_bit]:\n",
+    "        # Find all atoms within the specified radius\n",
+    "        env_atoms = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, center_atom)\n",
+    "        highlight_atoms.update(env_atoms)\n",
+    "    \n",
+    "    # Draw and save the highlighted structure\n",
+    "    drawer = rdMolDraw2D.MolDraw2DCairo(500, 500)\n",
+    "    drawer.DrawMolecule(mol, highlightAtoms=list(highlight_atoms))\n",
+    "    drawer.FinishDrawing()\n",
+    "    \n",
+    "    # Save image to file\n",
+    "    output_file = f\"ecfp_bit_{target_bit}.png\"\n",
+    "    with open(output_file, \"wb\") as f:\n",
+    "        f.write(drawer.GetDrawingText())\n",
+    "    print(f\"Image saved to: {output_file}\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ac672f44-cf7e-4564-ba87-879a691f2e5c",
+   "metadata": {},
+   "source": [
+    "## ECFP 972 ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "b022bb12-b7d4-40c4-9ccf-bf40a44686fb",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{17: ((9, 2), (2, 2)), 47: ((12, 3), (32, 3)), 50: ((9, 3), (2, 3)), 59: ((13, 1), (33, 1)), 62: ((6, 6),), 106: ((6, 4),), 114: ((0, 0), (1, 0), (2, 0), (3, 0), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (32, 0), (33, 0)), 188: ((9, 5), (2, 5)), 192: ((6, 0),), 304: ((6, 1),), 334: ((6, 3),), 346: ((11, 3), (0, 3)), 361: ((8, 4), (3, 4)), 374: ((12, 1), (11, 1), (10, 1), (9, 1), (2, 1), (1, 1), (32, 1), (0, 1)), 414: ((10, 4), (1, 4)), 429: ((4, 1), (5, 1), (14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1), (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (28, 1), (29, 1), (30, 1), (31, 1), (34, 1), (35, 1), (36, 1), (37, 1), (38, 1), (39, 1), (40, 1)), 486: ((7, 1),), 500: ((8, 3), (3, 3)), 583: ((9, 4), (2, 4)), 650: ((7, 0),), 696: ((8, 5), (3, 5)), 730: ((8, 6), (3, 6)), 758: ((8, 2), (3, 2)), 805: ((11, 4), (0, 4)), 807: ((27, 0), (9, 6), (2, 6)), 814: ((27, 1),), 886: ((13, 2), (33, 2)), 904: ((4, 0), (5, 0), (14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0), (25, 0), (26, 0), (28, 0), (29, 0), (30, 0), (31, 0), (34, 0), (35, 0), (36, 0), (37, 0), (38, 0), (39, 0), (40, 0)), 916: ((12, 2), (32, 2)), 929: ((3, 1), (8, 1)), 932: ((10, 3), (1, 3)), 972: ((11, 2), (10, 2), (1, 2), (0, 2)), 995: ((10, 5), (1, 5)), 1007: ((6, 5),), 1017: ((6, 2),)}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:12:51] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "#mol = Chem.MolFromSmiles('CCN(CC(=O)O)S(=O)(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F') #N-EtFOSAA\n",
+    "mol = Chem.MolFromSmiles('C(C(C(C(F)(F)P(=O)(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)(F)F)(F)F)(C(C(F)(F)F)(F)F)(F)F') #C6/C6 PFPiA\n",
+    "#mol = Chem.MolFromSmiles('C(C(C(C(C(F)(F)P(=O)(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)(F)F)(F)F)(F)F)(C(C(C(F)(F)F)(F)F)(F)F)(F)F') #C8/C8 PFPiA\n",
+    "bi = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=6,nBits=1024,bitInfo=bi)\n",
+    "print(bi)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "138c05ca-071e-47de-9296-e9c89e20e69b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bit 972 corresponds to the following atom environments:\n",
+      "((11, 2), (10, 2), (1, 2), (0, 2))\n",
+      "Image saved to: ecfp_bit_972.png\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:13:44] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'C(C(C(C(F)(F)P(=O)(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)(F)F)(F)F)(C(C(F)(F)F)(F)F)(F)F'\n",
+    "target_bit = 972  # Bit to visualize (e.g., ECFP-845)\n",
+    "\n",
+    "# Generate molecule from SMILES\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "if mol is None:\n",
+    "    raise ValueError(\"SMILES parsing failed. Please check the input format.\")\n",
+    "\n",
+    "# Calculate Morgan fingerprint and extract bit info\n",
+    "bit_info = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(\n",
+    "    mol, \n",
+    "    radius=6, \n",
+    "    nBits=1024, \n",
+    "    bitInfo=bit_info\n",
+    ")\n",
+    "\n",
+    "# Check if the target bit exists\n",
+    "if target_bit in bit_info:\n",
+    "    print(f\"Bit {target_bit} corresponds to the following atom environments:\")\n",
+    "    print(bit_info[target_bit])  # Output: [(center_atom_idx, radius)]\n",
+    "    \n",
+    "    # Get all atoms involved in the feature\n",
+    "    highlight_atoms = set()\n",
+    "    for (center_atom, radius) in bit_info[target_bit]:\n",
+    "        # Find all atoms within the specified radius\n",
+    "        env_atoms = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, center_atom)\n",
+    "        highlight_atoms.update(env_atoms)\n",
+    "    \n",
+    "    # Draw and save the highlighted structure\n",
+    "    drawer = rdMolDraw2D.MolDraw2DCairo(500, 500)\n",
+    "    drawer.DrawMolecule(mol, highlightAtoms=list(highlight_atoms))\n",
+    "    drawer.FinishDrawing()\n",
+    "    \n",
+    "    # Save image to file\n",
+    "    output_file = f\"ecfp_bit_{target_bit}.png\"\n",
+    "    with open(output_file, \"wb\") as f:\n",
+    "        f.write(drawer.GetDrawingText())\n",
+    "    print(f\"Image saved to: {output_file}\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "49adf38e-0f2f-4854-a312-427e726f582b",
+   "metadata": {},
+   "source": [
+    "## ECFP 57 ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "880d5b77-2f5b-400a-8b9e-4ed0f0bf56b4",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{29: ((3, 4),), 37: ((8, 5), (7, 5)), 42: ((9, 6),), 47: ((12, 3),), 56: ((8, 6),), 59: ((13, 1),), 114: ((2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0), (13, 0)), 204: ((9, 5),), 207: ((2, 2),), 346: ((11, 3),), 374: ((12, 1), (11, 1), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1)), 389: ((39, 1),), 429: ((14, 1), (15, 1), (16, 1), (17, 1), (18, 1), (19, 1), (20, 1), (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1), (31, 1), (32, 1), (33, 1), (34, 1), (35, 1), (36, 1), (37, 1), (38, 1)), 447: ((4, 3),), 475: ((0, 2),), 544: ((11, 4),), 615: ((4, 5),), 617: ((3, 2),), 619: ((2, 3),), 650: ((1, 0),), 681: ((9, 4), (8, 4), (7, 4), (6, 4)), 699: ((6, 6),), 750: ((3, 3),), 790: ((10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3)), 805: ((2, 1),), 807: ((0, 0), (39, 0)), 812: ((5, 5),), 833: ((7, 6),), 842: ((5, 6),), 845: ((5, 4),), 861: ((10, 4),), 886: ((13, 2),), 893: ((1, 1),), 897: ((6, 5),), 904: ((14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0), (25, 0), (26, 0), (27, 0), (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0), (35, 0), (36, 0), (37, 0), (38, 0)), 916: ((12, 2),), 924: ((4, 4),), 953: ((0, 1),), 972: ((11, 2), (10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2)), 993: ((10, 5),)}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:15:51] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    },
+    {
+     "data": {
+      "image/jpeg": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAEsAfQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKp3OqWdnc29vNMBLcSGJABnDBGk+b+78qMefSgC5RSKwZQykFSMgjoaWgAooooAKKKoXOsWVpcm3lkfzQASqxM2AfoKaTexE6kYK83Yv0VBa3cN7D5sJYpnHzIVOfoRU9JqxUZKSutgooooGFFFU7zVLSwkSO4kZXcEqFRmyB9BTSb0RM5xguaTsi5RVWz1C3vt/kM52YzujZev1A9KtUNNbhGUZLmi7oKKKKRQUUVWvb+30+NHuXKq7bFwpYk+mBTSb0RMpRiuaTsizRVO11S1vZTFA0hYDd80TKMfUirlDTW4QnGavF3QUUUUigooqG7uobK2e4uH2RJjc2CcZOO31oSuKUlFXexNRVCDWbK5nWGNpS7cDMLgfmRV+m01uTCpCavB3CiiikWFFFMlkSGJ5ZDhEUsx9AKAbtqx9FZkev6fKVCSSndjB8h8HPvitOm4tbkQqwqfA0/QKKKKRYUUUUAFFZY8Q6ac4llbBIysDkfyrSRxIiuv3WGRkYpuLW6M4VadT4JJ+g6iiikaBRRRQAUVnS65YQzyQvJIZIzhgsLtg/UCrtvPHcwLNESUbplSp/I803FrVozjVpzfLGSbJKKKKRoFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAVyXiTwXY67q0V9M1tHKqqEDWayb3DDJkJ++u3KhTwN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",
+      "image/png": "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",
+      "text/plain": [
+       "<PIL.PngImagePlugin.PngImageFile image mode=RGB size=500x300>"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#mol = Chem.MolFromSmiles('C(=O)(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O') #PFNA\n",
+    "#mol = Chem.MolFromSmiles('C(=O)(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O')  #PFDA\n",
+    "#mol = Chem.MolFromSmiles('CC(=O)(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O')  #PFUnA/PFUnDA\n",
+    "#mol = Chem.MolFromSmiles('C(=O)(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O')  #PFDoDA/PFDoA\n",
+    "mol = Chem.MolFromSmiles('C(=O)(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O')  #PFTrDA\n",
+    "#mol = Chem.MolFromSmiles('C(=O)(C(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O')  #PFTeDA/PFTeA\n",
+    "#mol = Chem.MolFromSmiles('CCN(CC(=O)O)S(=O)(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F') #N-EtFOSAA\n",
+    "#mol = Chem.MolFromSmiles('C(C(C(C(C(F)(F)S(=O)(=O)N)(F)F)(F)F)(F)F)(C(C(C(F)(F)F)(F)F)(F)F)(F)F') #FOSA\n",
+    "#mol = Chem.MolFromSmiles('C(CS(=O)(=O)O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F') #8:2 FTS\n",
+    "#mol = Chem.MolFromSmiles('C(C(C(C(C(F)(F)P(=O)(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O)(F)F)(F)F)(F)F)(C(C(C(F)(F)F)(F)F)(F)F)(F)F') #C8/C8 PFPiA\n",
+    "\n",
+    "bi = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=6,nBits=1024,bitInfo=bi)\n",
+    "print(bi)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "d30667d3-e46f-4940-9173-aaa97c866f5c",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bit 56 corresponds to the following atom environments:\n",
+      "((8, 6),)\n",
+      "Image saved to: ecfp_bit_56.png\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:16:40] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'C(=O)(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O'\n",
+    "target_bit = 56  # Bit to visualize (e.g., ECFP-845)\n",
+    "\n",
+    "# Generate molecule from SMILES\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "if mol is None:\n",
+    "    raise ValueError(\"SMILES parsing failed. Please check the input format.\")\n",
+    "\n",
+    "# Calculate Morgan fingerprint and extract bit info\n",
+    "bit_info = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(\n",
+    "    mol, \n",
+    "    radius=6, \n",
+    "    nBits=1024, \n",
+    "    bitInfo=bit_info\n",
+    ")\n",
+    "\n",
+    "# Check if the target bit exists\n",
+    "if target_bit in bit_info:\n",
+    "    print(f\"Bit {target_bit} corresponds to the following atom environments:\")\n",
+    "    print(bit_info[target_bit])  # Output: [(center_atom_idx, radius)]\n",
+    "    \n",
+    "    # Get all atoms involved in the feature\n",
+    "    highlight_atoms = set()\n",
+    "    for (center_atom, radius) in bit_info[target_bit]:\n",
+    "        # Find all atoms within the specified radius\n",
+    "        env_atoms = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, center_atom)\n",
+    "        highlight_atoms.update(env_atoms)\n",
+    "    \n",
+    "    # Draw and save the highlighted structure\n",
+    "    drawer = rdMolDraw2D.MolDraw2DCairo(500, 500)\n",
+    "    drawer.DrawMolecule(mol, highlightAtoms=list(highlight_atoms))\n",
+    "    drawer.FinishDrawing()\n",
+    "    \n",
+    "    # Save image to file\n",
+    "    output_file = f\"ecfp_bit_{target_bit}.png\"\n",
+    "    with open(output_file, \"wb\") as f:\n",
+    "        f.write(drawer.GetDrawingText())\n",
+    "    print(f\"Image saved to: {output_file}\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "873f2a9f-823f-469c-94c1-7fa54aa7db35",
+   "metadata": {},
+   "source": [
+    "## ECFP 898 ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "32f4fb9c-590d-4781-b886-f5a1845766a1",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bit 897 corresponds to the following atom environments:\n",
+      "((6, 5),)\n",
+      "Image saved to: ecfp_bit_897.png\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:26:20] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'C(=O)(C(C(C(C(C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)O'\n",
+    "target_bit = 897  # Bit to visualize (e.g., ECFP-845)\n",
+    "\n",
+    "# Generate molecule from SMILES\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "if mol is None:\n",
+    "    raise ValueError(\"SMILES parsing failed. Please check the input format.\")\n",
+    "\n",
+    "# Calculate Morgan fingerprint and extract bit info\n",
+    "bit_info = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(\n",
+    "    mol, \n",
+    "    radius=6, \n",
+    "    nBits=1024, \n",
+    "    bitInfo=bit_info\n",
+    ")\n",
+    "\n",
+    "# Check if the target bit exists\n",
+    "if target_bit in bit_info:\n",
+    "    print(f\"Bit {target_bit} corresponds to the following atom environments:\")\n",
+    "    print(bit_info[target_bit])  # Output: [(center_atom_idx, radius)]\n",
+    "    \n",
+    "    # Get all atoms involved in the feature\n",
+    "    highlight_atoms = set()\n",
+    "    for (center_atom, radius) in bit_info[target_bit]:\n",
+    "        # Find all atoms within the specified radius\n",
+    "        env_atoms = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, center_atom)\n",
+    "        highlight_atoms.update(env_atoms)\n",
+    "    \n",
+    "    # Draw and save the highlighted structure\n",
+    "    drawer = rdMolDraw2D.MolDraw2DCairo(500, 500)\n",
+    "    drawer.DrawMolecule(mol, highlightAtoms=list(highlight_atoms))\n",
+    "    drawer.FinishDrawing()\n",
+    "    \n",
+    "    # Save image to file\n",
+    "    output_file = f\"ecfp_bit_{target_bit}.png\"\n",
+    "    with open(output_file, \"wb\") as f:\n",
+    "        f.write(drawer.GetDrawingText())\n",
+    "    print(f\"Image saved to: {output_file}\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9598b672-7a0b-45b1-89ee-bd1f4fec9d22",
+   "metadata": {},
+   "source": [
+    "## ECFP 969 ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "98040bca-621d-4226-99be-7a33bb1d6cef",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{6: ((3, 3),), 33: ((0, 0),), 38: ((13, 4), (14, 5)), 47: ((16, 3),), 59: ((17, 1),), 65: ((10, 2),), 80: ((1, 0), (3, 0)), 93: ((11, 4),), 114: ((10, 0), (11, 0), (12, 0), (13, 0), (14, 0), (15, 0), (16, 0), (17, 0)), 124: ((2, 2),), 166: ((3, 1),), 171: ((11, 6),), 174: ((11, 2),), 175: ((7, 3),), 193: ((12, 4),), 260: ((2, 4),), 294: ((0, 1),), 304: ((2, 1),), 312: ((12, 3),), 315: ((13, 5),), 328: ((12, 6),), 346: ((15, 3),), 350: ((7, 0),), 374: ((16, 1), (15, 1), (14, 1), (13, 1), (12, 1), (11, 1), (7, 4)), 389: ((6, 1),), 395: ((7, 1),), 429: ((18, 1), (19, 1), (20, 1), (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1), (31, 1), (32, 1), (33, 1), (34, 1)), 434: ((13, 6),), 452: ((8, 1), (9, 1)), 523: ((12, 5),), 539: ((10, 1),), 544: ((15, 4),), 605: ((4, 2),), 612: ((3, 2),), 625: ((10, 4),), 650: ((5, 0), (8, 0), (9, 0)), 695: ((10, 3),), 713: ((4, 1),), 787: ((11, 3),), 790: ((14, 3), (13, 3)), 805: ((1, 2),), 807: ((4, 0), (6, 0)), 823: ((7, 2),), 861: ((14, 4),), 879: ((10, 6),), 881: ((2, 0),), 885: ((11, 5),), 886: ((17, 2),), 893: ((5, 1),), 900: ((10, 5),), 904: ((18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0), (25, 0), (26, 0), (27, 0), (28, 0), (29, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0)), 913: ((2, 3),), 916: ((16, 2),), 932: ((1, 1),), 968: ((7, 5),), 972: ((15, 2), (14, 2), (13, 2), (12, 2))}\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:18:59] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    },
+    {
+     "data": {
+      "image/jpeg": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAEsAfQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiq2oTPb6bdTxkB44ndcjuASKo2ceq3Fvb3DalFtkVXKfZh0IzjOapRur3MZ1uWfIotv5fq0a9FFFSbBRRRQAVymlNb3Wnxy3euXEc7FtyfawuPmIHB9sV1dYnh+wh/sWAz2kfm5fPmRjd9846itINKL/ruceIhKdWKXZ/nE2lXairknAxknJNLRRWZ2BRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRVO/wBRj08Q74ppWlfYixKCScZ7kUWmoNdSmM2V3Bhc7pkAH04J5p8rtcz9tDn5L6lyiiikaBRRRQBS1W+bTtPe5SMSMGUBScZyQP6023m1Rp1E9pbpEfvMsxJH4Yqt4nGdDkGcZePn/gQq1a2M9vMJJNQuJ1xjY4XH6CtElyXOOUpvEOKvZJbW7ve+vToXqKKKzOwKKKKAKer/APIFvv8Ar3k/9BNUtK0exWzsrkRP5vlo+fNfGcDtnFbDKGUqwBUjBBHBrNv7qWzvtNSMhbeWQxOu0dx8v05q4t25UctanBT9rNXtZbee5p0UUVB1BRRRQAVleIZZbfSxcxO6mGVHbacZGcEH1HNatVNVg+06Tdw4yWibH1xx+tVB2kjHERcqUkt7MtgggEdDRVLR5/tOj2kuckxKD9QMH9RV2k1Z2NISU4qS6hRRRSKCiiigAooooAKKKKACiiigAooo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VfqFFFFIoKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAr23yyTJ6NkVYquPkvj/ALa/5/lVigAooooAKKKKAMbVf3Gs6TddAZGhb33Dj9a2ax9Xlmk1CysoYbeRn3SqZ92FZeh4+tXrP7fl/tv2bHG3yd345zWkl7qOSlK1WaXV/jZf8AtUUUVmdYUUUUAZOuzTxx2ccE3kme5WJm2huCD2NWLO2uYpt0upPcJjGwxoPx4FU/EMSTDTYpFDI96gZT3GDWha6bZ2Ls9tbpEzDBKjqK0bSgjijGUsRJ9Fbq+3bZlqiiisztCiiigDL8RQy3GhXMUMbSSNtwqjJPzCtIIoOQoB9hTqKd9LGappTc+6S+6/+YUUUUjQKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAwPEniTTvDoiku3AnYqI0Y7FYF1UneRtGN2cE5wDWvY31tqVml3aSeZA5O1tpXOCQeCAeo/Gq2raHZa4kUV+jywxlj5O8hHJUr8w74zkehwat2luLSzhtlklkESBA8r7nbAxlj3PvQBNRRRQAUUUUAYWq2/2nxBp0XmyxZjlO6Jtrdu9alnafZEZftFxNuOczSbiPpUrQRPOkzRqZUBCsRyAetSVTldJGFOgozlN7t/okFFFFSbhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAH/2Q==",
+      "image/png": "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",
+      "text/plain": [
+       "<PIL.PngImagePlugin.PngImageFile image mode=RGB size=500x300>"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "mol = Chem.MolFromSmiles('CCN(CC(=O)O)S(=O)(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F') #N-EtFOSAA\n",
+    "\n",
+    "bi = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=6,nBits=1024,bitInfo=bi)\n",
+    "print(bi)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "33adcfaf-49bd-4c85-80f8-cfeba0e1d2b0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Bit 968 corresponds to the following atom environments:\n",
+      "((7, 5),)\n",
+      "Image saved to: ecfp_bit_968.png\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[17:19:51] DEPRECATION WARNING: please use MorganGenerator\n"
+     ]
+    }
+   ],
+   "source": [
+    "smiles = 'CCN(CC(=O)O)S(=O)(=O)C(C(C(C(C(C(C(C(F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F)(F)F'\n",
+    "target_bit = 968  # Bit to visualize (e.g., ECFP-845)\n",
+    "\n",
+    "# Generate molecule from SMILES\n",
+    "mol = Chem.MolFromSmiles(smiles)\n",
+    "if mol is None:\n",
+    "    raise ValueError(\"SMILES parsing failed. Please check the input format.\")\n",
+    "\n",
+    "# Calculate Morgan fingerprint and extract bit info\n",
+    "bit_info = {}\n",
+    "fp = AllChem.GetMorganFingerprintAsBitVect(\n",
+    "    mol, \n",
+    "    radius=6, \n",
+    "    nBits=1024, \n",
+    "    bitInfo=bit_info\n",
+    ")\n",
+    "\n",
+    "# Check if the target bit exists\n",
+    "if target_bit in bit_info:\n",
+    "    print(f\"Bit {target_bit} corresponds to the following atom environments:\")\n",
+    "    print(bit_info[target_bit])  # Output: [(center_atom_idx, radius)]\n",
+    "    \n",
+    "    # Get all atoms involved in the feature\n",
+    "    highlight_atoms = set()\n",
+    "    for (center_atom, radius) in bit_info[target_bit]:\n",
+    "        # Find all atoms within the specified radius\n",
+    "        env_atoms = Chem.FindAtomEnvironmentOfRadiusN(mol, radius, center_atom)\n",
+    "        highlight_atoms.update(env_atoms)\n",
+    "    \n",
+    "    # Draw and save the highlighted structure\n",
+    "    drawer = rdMolDraw2D.MolDraw2DCairo(500, 500)\n",
+    "    drawer.DrawMolecule(mol, highlightAtoms=list(highlight_atoms))\n",
+    "    drawer.FinishDrawing()\n",
+    "    \n",
+    "    # Save image to file\n",
+    "    output_file = f\"ecfp_bit_{target_bit}.png\"\n",
+    "    with open(output_file, \"wb\") as f:\n",
+    "        f.write(drawer.GetDrawingText())\n",
+    "    print(f\"Image saved to: {output_file}\")\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a7e15c37-4f9c-42e6-985f-e13b0e2046b9",
+   "metadata": {},
+   "source": [
+    "## Separated the bits into multiple columns ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "60c9bf6c-1675-47bb-8760-543fa7b8601d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ECFP_file_path = 'PFAS_SMILES_with_ECFP.csv'\n",
+    "df = pd.read_csv(ECFP_file_path)\n",
+    "ecfp = 'ECFP'\n",
+    "\n",
+    "def split_ecfp(row):\n",
+    "    ecfp_str = row[ecfp]\n",
+    "    return pd.Series(list(ecfp_str))\n",
+    "\n",
+    "split_columns = df.apply(split_ecfp, axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "0b6b3518-e8e2-4547-b1d2-133d74e036df",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "split_columns.columns = [f'ECFP_{i+1}' for i in range(split_columns.shape[1])]\n",
+    "df = pd.concat([df, split_columns], axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "e1af9c7c-c3b9-4067-87b8-28053369f0c9",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Processed data saved to PFAS_SMILES_with_ECFP_split.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "output_file_path = 'PFAS_SMILES_with_ECFP_split.csv' \n",
+    "df.to_csv(output_file_path, index=False)\n",
+    "\n",
+    "print(f\"Processed data saved to {output_file_path}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "867c7a80-cf01-4036-b612-abcf59b40d37",
+   "metadata": {},
+   "source": [
+    "## Remove 0-variance bits ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "ce4dad70-7acb-4ab6-a8cf-955aa1d22cf0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "file_path = 'PFAS_SMILES_with_ECFP_split.csv' \n",
+    "df = pd.read_csv(file_path)\n",
+    "variance = df.iloc[:, 4:].var()\n",
+    "\n",
+    "columns_to_drop = variance[variance == 0].index\n",
+    "df_cleaned = df.drop(columns=columns_to_drop, axis=1)\n",
+    "\n",
+    "output_file_path = 'PFAS_ECFP_cleaned1.csv' \n",
+    "df_cleaned.to_csv(output_file_path, index=False)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e13f8f97-ff3e-4ed8-b999-fbf56fe32a07",
+   "metadata": {},
+   "source": [
+    "## Eliminate highly correlated bits ##"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "579e3d43-cab6-4efe-91c6-f18be1e019c3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "file_path = 'PFAS_ECFP_cleaned1.csv' \n",
+    "df = pd.read_csv(file_path)\n",
+    "\n",
+    "df_subset = df.iloc[:, 4:]\n",
+    "spearman_corr_matrix = df_subset.corr(method='spearman')\n",
+    "\n",
+    "output_corr_matrix_path = 'spearman_corr_matrix-ECFP.csv'\n",
+    "spearman_corr_matrix.to_csv(output_corr_matrix_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "17b3beb8-6fff-4a3a-92f7-cf0e717a85f8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sns.heatmap(spearman_corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', \n",
+    "            vmin=-1, vmax=1, center=0, cbar=True, square=True, linewidths=0.5, linecolor='black')\n",
+    "plt.title('Spearman Correlation Heatmap')\n",
+    "plt.show()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
