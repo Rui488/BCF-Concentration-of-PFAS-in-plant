@@ -95,6 +95,7 @@ For transparency, we provide Data cleaning.ipynb and PFAS-ECFP.ipynb to show the
 #### 2. Run Models:
 
 Individual model notebooks:
+```bash
 ANN-BCF.ipynb
 
 RF-BCF.ipynb
@@ -104,7 +105,7 @@ SVM-BCF.ipynb
 XGBoost_BCF+feature importance.ipynb
 
 XGBoost-BCF-PDP.ipynb
-
+```
 Starting Jupyter Notebook:
 ```bash
 jupyter notebook
