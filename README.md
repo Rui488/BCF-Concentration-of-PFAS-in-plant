@@ -55,7 +55,6 @@ cd BCF-Concentration-of-PFAS-in-plant
 ```
 #### 2. Setting Up Python Environment
 If you don't have Python installed:
-
 1. Windows: Download from python.org
 2. macOS:
 ```bash
@@ -73,19 +72,18 @@ If you don't have Jupyter installed:
 pip install jupyter
 ```
 #### 3. Install Required Packages
-bash
-pip install -r requirements.txt
-Troubleshooting Package Installation
-If specific packages fail to install:
-
-bash
+```bash
 #### Install packages individually
 pip install numpy pandas scikit-learn
-pip install xgboost
-pip install shap
-pip install matplotlib seaborn
-pip install tqdm scipy jupyter
 
+pip install xgboost
+
+pip install shap
+
+pip install matplotlib seaborn
+
+pip install tqdm scipy jupyter
+```
 
 ### Reproducing Results
 #### 1. Data Preparation:
@@ -98,22 +96,25 @@ For transparency, we provide Data cleaning.ipynb and PFAS-ECFP.ipynb to show the
 
 Individual model notebooks:
 ANN-BCF.ipynb
+
 RF-BCF.ipynb
+
 SVM-BCF.ipynb
+
 XGBoost_BCF+feature importance.ipynb
+
 XGBoost-BCF-PDP.ipynb
 
 Starting Jupyter Notebook:
-bash
+```bash
 jupyter notebook
 Then open the desired .ipynb file from the browser interface.
-
+```
 ### For Concentration Models
 To adapt this code for Concentration prediction:
 1. Replace BCF dataset files with Concentration datasets
 2. Update file paths in the notebooks to point to your Concentration data
 3. The same modeling and interpretation approaches apply directly
-
 
 ### License
 This project is licensed under the MIT License - see the LICENSE file for details.
