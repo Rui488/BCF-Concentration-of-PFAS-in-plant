@@ -8,18 +8,29 @@ Official implementation of the paper "Predicting Bioconcentration Factors and Co
 This repository contains the implementation and data for the paper "Predicting Bioconcentration Factors and Concentrations of Per- and Polyfluoroalkyl Substances in Plants with Machine Learning". It includes four machine learning models (XGBoost, Random Forest, MLP, SVR) for BCF and concentration prediction with comprehensive model interpretation using SHAP, permutation importance, and partial dependence plots.
 
 ### Repository Structure
-
-├── ANN-BCF.ipynb # Artificial Neural Network model
-├── RF-BCF.ipynb # Random Forest model
-├── SVM-BCF.ipynb # Support Vector Machine model
-├── XGBoost_BCF+feature importance.ipynb # XGBoost with feature importance
-├── XGBoost-BCF-PDP.ipynb # XGBoost with Partial Dependence Plots
-├── Data cleaning.ipynb # Data preprocessing and cleaning
-├── PFAS-ECF.ipynb # ECFP fingerprint generation & visualization
 ├── data/ # Processed datasets
+│ ├── ANN-BCF.ipynb # Artificial Neural Network model
+
+│ ├── RF-BCF.ipynb # Random Forest model
+
+│ ├── SVM-BCF.ipynb # Support Vector Machine model
+
+│ ├── XGBoost_BCF+feature importance.ipynb # XGBoost with feature importance
+
+│ ├── XGBoost-BCF-PDP.ipynb # XGBoost with Partial Dependence Plots
+
+│ ├── Data cleaning.ipynb # Data preprocessing and cleaning
+
+│ ├── PFAS-ECFP.ipynb # ECFP fingerprint generation & visualization
+
+├── data/ # Processed datasets
+
 │ ├── dataset_concn.csv.csv # Preprocessed data for concentration
+
 │ └── dataset_BCF.csv # Preprocessed data for BCF
+
 ├── requirements.txt # Python dependencies
+
 └── README.md # This file
 
 ## Model Scope
@@ -45,23 +56,22 @@ cd BCF-Concentration-of-PFAS-in-plant
 #### 2. Setting Up Python Environment
 If you don't have Python installed:
 
-Windows: Download from python.org
-
-macOS:
-bash
+1. Windows: Download from python.org
+2. macOS:
+```bash
 # Using Homebrew
 brew install python
-
-Linux:
-bash
+```
+3. Linux:
+```bash
 # Ubuntu/Debian
 sudo apt update
 sudo apt install python3 python3-pip
-
+```
 If you don't have Jupyter installed:
-bash
+```bash
 pip install jupyter
-
+```
 #### 3. Install Required Packages
 bash
 pip install -r requirements.txt
@@ -69,7 +79,7 @@ Troubleshooting Package Installation
 If specific packages fail to install:
 
 bash
-# Install packages individually
+#### Install packages individually
 pip install numpy pandas scikit-learn
 pip install xgboost
 pip install shap
@@ -78,13 +88,13 @@ pip install tqdm scipy jupyter
 
 
 ### Reproducing Results
-# 1. Data Preparation:
+#### 1. Data Preparation:
 
 The data/ folder contains already preprocessed data ready for modeling
 
 For transparency, we provide Data cleaning.ipynb and PFAS-ECFP.ipynb to show the data preprocessing and fingerprint generation steps we performed
 
-# 2. Run Models:
+#### 2. Run Models:
 
 Individual model notebooks:
 ANN-BCF.ipynb
