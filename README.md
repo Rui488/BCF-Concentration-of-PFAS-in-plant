@@ -108,7 +108,8 @@ XGBoost-BCF-PDP.ipynb
 ```
 Starting Jupyter Notebook:
 ```bash
-jupyter notebook
+#jupyter notebook
+
 Then open the desired .ipynb file from the browser interface.
 ```
 ### For Concentration Models
